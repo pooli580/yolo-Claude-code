@@ -1,12 +1,31 @@
 {
   "env": {
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "MiniMax-M2.5",
+    "FIRECRAWL_API_KEY": "fc-4dba0181d04e4872a965dbfe6d812763",
+    "ANTHROPIC_AUTH_TOKEN": "sk-sp-6ffefabb4ae64f3ab01118590de84bdd",
+    "ANTHROPIC_BASE_URL": "https://coding.dashscope.aliyuncs.com/apps/anthropic",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "qwen3.5-plus",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "qwen3.5-plus",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "qwen3.5-plus",
     "ANTHROPIC_MODEL": "qwen3.5-plus"
   },
-  "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true
-  }
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(echo:*)",
+      "Bash(npm search:*)",
+      "Bash(npx:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.firecrawl.dev)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Skill(update-config)",
+      "mcp__firecrawl__firecrawl_scrape",
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "Read(//c/Users/marathon/.claude/**)"
+    ]
+  },
+  "enableAllProjectMcpServers": true
 }
