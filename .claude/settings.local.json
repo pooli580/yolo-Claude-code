@@ -1,0 +1,28 @@
+{
+  "env": {
+    "FIRECRAWL_API_KEY": "fc-4dba0181d04e4872a965dbfe6d812763"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.firecrawl.dev)",
+      "Bash(dir:*)",
+      "Skill(update-config)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__firecrawl__firecrawl_scrape",
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "Read(//c/Users/marathon/.claude/**)",
+      "Bash(npx -y @anthropic-ai/sequential-thinking-mcp --help)",
+      "Bash(npm search:*)",
+      "Bash(gh pr:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout:*)",
+      "Bash(git rm:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true
+}
