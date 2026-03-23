@@ -1,0 +1,67 @@
+# YOLOv8s-Strip 配置
+# 基于 Strip R-CNN 论文设计
+# 论文：https://arxiv.org/abs/2501.03775
+
+# 类别数（根据数据集修改）
+nc: 80
+
+# 尺度参数
+scales:
+  - [28, 28]  # P3
+  - [14, 14]  # P4
+  - [7, 7]    # P5
+
+# 骨干网络配置
+backbone:
+  # [index, repeats, module, args]
+  - [0, 1, Stem, [64]]                    # Stem: 3->64 通道
+  - [1, 2, StripModule, [64, 19]]         # Stage1: 64 通道，kernel=19
+  - [2, 1, DownSample, [128]]             # 下采样到 128
+  - [3, 2, StripModule, [128, 19]]        # Stage2: 128 通道
+  - [4, 1, DownSample, [320]]             # 下采样到 320
+  - [5, 4, StripModule, [320, 19]]        # Stage3: 320 通道
+  - [6, 1, DownSample, [512]]             # 下采样到 512
+  - [7, 2, StripModule, [512, 19]]        # Stage4: 512 通道
+
+# 颈部网络配置 (FPN+PAN)
+neck:
+  - [8, 1, SPPF, [512]]                   # SPPF
+  - [9, 1, nn.Upsample, [null, 2, nearest]]
+  - [[10, 6], 1, StripC2f, [320, 3, 19]]  # FPN 融合 P4
+  - [11, 1, nn.Upsample, [null, 2, nearest]]
+  - [[12, 4], 1, StripC2f, [128, 3, 19]]  # FPN 融合 P3
+  - [13, 1, DownSample, [128]]
+  - [[14, 11], 1, StripC2f, [320, 3, 19]] # PAN 融合 P4
+  - [15, 1, DownSample, [320]]
+  - [[16, 9], 1, StripC2f, [512, 3, 19]]  # PAN 融合 P5
+
+# 检测头配置
+head:
+  - [[13, 15, 17], 1, StripDetect, [nc]]  # P3, P4, P5 输出
+
+# 超参数
+hyp:
+  lr0: 0.001          # 初始学习率
+  lrf: 0.01           # 最终学习率 (lr0 * lrf)
+  momentum: 0.937     # SGD 动量/Adam beta1
+  weight_decay: 0.05  # 权重衰减
+  warmup_epochs: 3.0  # 预热轮数
+  warmup_momentum: 0.8
+  box: 7.5            # 边界框损失权重
+  cls: 0.5            # 分类损失权重
+  dfl: 1.5            # DFL 损失权重
+
+# 数据增强
+augment:
+  hsv_h: 0.015        # 色调增强
+  hsv_s: 0.7          # 饱和度增强
+  hsv_v: 0.4          # 亮度增强
+  degrees: 0.0        # 旋转角度
+  translate: 0.1      # 平移
+  scale: 0.5          # 缩放
+  shear: 0.0          # 剪切
+  perspective: 0.0    # 透视
+  flipud: 0.0         # 垂直翻转概率
+  fliplr: 0.5         # 水平翻转概率
+  mosaic: 1.0         # Mosaic 增强概率
+  mixup: 0.0          # MixUp 增强概率

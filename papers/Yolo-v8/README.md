@@ -1,282 +1,304 @@
-<div align="center">
-  <p>
-    <a href="https://ultralytics.com/yolov8" target="_blank">
-      <img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/banner-yolov8.png"></a>
-  </p>
+# YOLOv8-Strip: Large Strip Convolution for YOLOv8
 
-[English](README.md) | [简体中文](README.zh-CN.md)
-<br>
+基于 **Strip R-CNN** 论文实现的 YOLOv8 改进版本，专门针对**高长宽比物体检测**优化。
 
-<div>
-    <a href="https://github.com/ultralytics/ultralytics/actions/workflows/ci.yaml"><img src="https://github.com/ultralytics/ultralytics/actions/workflows/ci.yaml/badge.svg" alt="Ultralytics CI"></a>
-    <a href="https://zenodo.org/badge/latestdoi/264818686"><img src="https://zenodo.org/badge/264818686.svg" alt="YOLOv8 Citation"></a>
-    <a href="https://hub.docker.com/r/ultralytics/ultralytics"><img src="https://img.shields.io/docker/pulls/ultralytics/ultralytics?logo=docker" alt="Docker Pulls"></a>
-    <br>
-    <a href="https://console.paperspace.com/github/ultralytics/ultralytics"><img src="https://assets.paperspace.io/img/gradient-badge.svg" alt="Run on Gradient"/></a>
-    <a href="https://colab.research.google.com/github/ultralytics/ultralytics/blob/main/examples/tutorial.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
-    <a href="https://www.kaggle.com/ultralytics/yolov8"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"></a>
-  </div>
-  <br>
+## 论文信息
 
-[Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics), developed by [Ultralytics](https://ultralytics.com),
-is a cutting-edge, state-of-the-art (SOTA) model that builds upon the success of previous YOLO versions and introduces
-new features and improvements to further boost performance and flexibility. YOLOv8 is designed to be fast, accurate, and
-easy to use, making it an excellent choice for a wide range of object detection, image segmentation and image
-classification tasks.
+**Strip R-CNN: Large Strip Convolution for Remote Sensing Object Detection**
 
-To request an Enterprise License please complete the form at [Ultralytics Licensing](https://ultralytics.com/license).
+- **arXiv**: https://arxiv.org/abs/2501.03775
+- **GitHub**: https://github.com/HVision-NKU/Strip-R-CNN
+- **作者**: Xinbin Yuan, Zhaohui Zheng, Yuxuan Li, et al. (南开大学 VCIP)
 
-<img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/yolo-comparison-plots.png"></a>
+### 核心创新
 
-<div align="center">
-    <a href="https://github.com/ultralytics" style="text-decoration:none;">
-      <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-github.png" width="2%" alt="" /></a>
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-    <a href="https://www.linkedin.com/company/ultralytics" style="text-decoration:none;">
-      <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-linkedin.png" width="2%" alt="" /></a>
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-    <a href="https://twitter.com/ultralytics" style="text-decoration:none;">
-      <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-twitter.png" width="2%" alt="" /></a>
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-    <a href="https://www.producthunt.com/@glenn_jocher" style="text-decoration:none;">
-      <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-producthunt.png" width="2%" alt="" /></a>
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-    <a href="https://youtube.com/ultralytics" style="text-decoration:none;">
-      <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-youtube.png" width="2%" alt="" /></a>
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-    <a href="https://www.facebook.com/ultralytics" style="text-decoration:none;">
-      <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-facebook.png" width="2%" alt="" /></a>
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-    <a href="https://www.instagram.com/ultralytics/" style="text-decoration:none;">
-      <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-instagram.png" width="2%" alt="" /></a>
-  </div>
-</div>
+1. **Large Strip Convolution**: 使用正交条带卷积 (H-Strip + V-Strip) 替代传统方形卷积
+2. **StripNet Backbone**: 简单高效的主干网络，仅 13.3M 参数
+3. **Strip Head**: 解耦检测头，定位分支使用 strip 卷积增强空间依赖
 
-## <div align="center">Documentation</div>
+### 主要结果
 
-See below for a quickstart installation and usage example, and see the [YOLOv8 Docs](https://docs.ultralytics.com) for
-full documentation on training, validation, prediction and deployment.
+| 数据集 | mAP | 参数量 | FLOPs |
+|--------|-----|--------|-------|
+| DOTA-v1.0 | 82.75% | 13.3M | 52.3G |
+| FAIR1M-v1.0 | 48.26% | 13.3M | 52.3G |
+| HRSC2016 | 98.70% | 13.3M | 52.3G |
+| DIOR-R | 68.70% | 13.3M | 52.3G |
 
-<details open>
-<summary>Install</summary>
+---
 
-Pip install the ultralytics package including
-all [requirements.txt](https://github.com/ultralytics/ultralytics/blob/main/requirements.txt) in a
-[**Python>=3.7**](https://www.python.org/) environment with
-[**PyTorch>=1.7**](https://pytorch.org/get-started/locally/).
+## 快速开始
+
+### 安装依赖
 
 ```bash
-pip install ultralytics
+pip install torch torchvision
 ```
 
-</details>
-
-<details open>
-<summary>Usage</summary>
-
-#### CLI
-
-YOLOv8 may be used directly in the Command Line Interface (CLI) with a `yolo` command:
-
-```bash
-yolo predict model=yolov8n.pt source="https://ultralytics.com/images/bus.jpg"
-```
-
-`yolo` can be used for a variety of tasks and modes and accepts additional arguments, i.e. `imgsz=640`. See the YOLOv8
-[CLI Docs](https://docs.ultralytics.com/cli) for examples.
-
-#### Python
-
-YOLOv8 may also be used directly in a Python environment, and accepts the
-same [arguments](https://docs.ultralytics.com/cfg/) as in the CLI example above:
+### 基本使用
 
 ```python
-from ultralytics import YOLO
+import torch
+from yolov8_strip import yolov8s_strip
 
-# Load a model
-model = YOLO("yolov8n.yaml")  # build a new model from scratch
-model = YOLO("yolov8n.pt")  # load a pretrained model (recommended for training)
+# 创建模型
+model = yolov8s_strip(num_classes=15)  # DOTA 数据集 15 类
+model.eval()
 
-# Use the model
-model.train(data="coco128.yaml", epochs=3)  # train the model
-metrics = model.val()  # evaluate model performance on the validation set
-results = model("https://ultralytics.com/images/bus.jpg")  # predict on an image
-success = model.export(format="onnx")  # export the model to ONNX format
+# 前向传播
+img = torch.randn(1, 3, 640, 640)
+with torch.no_grad():
+    outputs = model(img)
+
+# 输出格式
+print(outputs['cls'])   # 分类得分列表 [P3, P4, P5]
+print(outputs['loc'])   # 边界框列表 [P3, P4, P5]
+print(outputs['angle']) # 角度列表 [P3, P4, P5]
 ```
 
-[Models](https://github.com/ultralytics/ultralytics/tree/main/ultralytics/models) download automatically from the latest
-Ultralytics [release](https://github.com/ultralytics/assets/releases). See
-YOLOv8 [Python Docs](https://docs.ultralytics.com/python) for more examples.
+### 模型变体
 
-#### Model Architectures
+| 模型 | 函数 | 参数量 | 推荐用途 |
+|------|------|--------|----------|
+| Nano | `yolov8n_strip()` | ~4M | 移动端/实时 |
+| Small | `yolov8s_strip()` | ~26M | 通用 (推荐) |
+| Medium | `yolov8m_strip()` | ~50M | 高精度 |
+| Large | `yolov8l_strip()` | ~90M | 最高精度 |
 
-⭐ **NEW** YOLOv5u anchor free models are now available.
+---
 
-All supported model architectures can be found in the [Models](./ultralytics/models/) section.
+## 架构设计
 
-#### Known Issues / TODOs
+### 整体架构
 
-We are still working on several parts of YOLOv8! We aim to have these completed soon to bring the YOLOv8 feature set up
-to par with YOLOv5, including export and inference to all the same formats. We are also writing a YOLOv8 paper which we
-will submit to [arxiv.org](https://arxiv.org) once complete.
+```
+输入图像 (3, H, W)
+    |
+    v
++------------------+
+|  StripNet        |
+|  Backbone        |
+|  - Stem          |
+|  - Stage1-4      |
+|  输出：P3, P4, P5|
++------------------+
+    |
+    v
++------------------+
+|  FPN+PAN Neck    |
+|  (StripC2f)      |
++------------------+
+    |
+    v
++------------------+
+|  Strip Detect    |
+|  Head            |
+|  - 分类分支      |
+|  - 定位分支      |
+|  - 角度分支      |
++------------------+
+    |
+    v
+输出：cls, loc, angle
+```
 
-- [x] TensorFlow exports
-- [x] DDP resume
-- [ ] [arxiv.org](https://arxiv.org) paper
+### StripModule 结构
 
-</details>
+```
+输入 X
+  |
+  +---> [5x5 DW-Conv] -> BN -> GELU ---+
+  |                                     |
+  |                  +---> [1x19 DW-Conv] --+
+  |                  |                      |
+  |                  +---> [19x1 DW-Conv] --+--> [拼接]
+  |                                         |
+  |                  [1x1 PW-Conv] -> BN -->|
+  |                                         |
+  +-----------------> x (注意力加权) --------+
+                      |
+                      v
+                   输出 Y
+```
 
-## <div align="center">Models</div>
+---
 
-All YOLOv8 pretrained models are available here. Detection and Segmentation models are pretrained on the COCO dataset,
-while Classification models are pretrained on the ImageNet dataset.
+## 模块说明
 
-[Models](https://github.com/ultralytics/ultralytics/tree/main/ultralytics/models) download automatically from the latest
-Ultralytics [release](https://github.com/ultralytics/assets/releases) on first use.
+### 文件结构
 
-<details open><summary>Detection</summary>
+```
+papers/Yolo-v8/
+|-- __init__.py           # 模块入口
+|-- strip_conv.py         # Strip 卷积核心模块
+|   |-- LargeStripConv    # 大条带卷积 (H-Strip + V-Strip)
+|   |-- StripConv         # 完整 Strip 卷积模块
+|   |-- StripModule       # Strip 基本构建块
+|   +-- StripC2f          # YOLOv8 C2f 的 Strip 版本
+|-- strip_net.py          # StripNet 骨干网络
+|   |-- StripNet          # 骨干网络类
+|   |-- strip_net_tiny    # Tiny 版本 (~4M)
+|   |-- strip_net_small   # Small 版本 (~13M, 推荐)
+|   +-- strip_net_base    # Base 版本
+|-- strip_head.py         # Strip 检测头
+|   |-- ClassificationBranch  # 分类分支
+|   |-- LocalizationBranch  # 定位分支 (含 Strip Module)
+|   |-- AngleBranch       # 角度预测分支
+|   |-- StripHead         # 完整检测头
+|   +-- StripDetectHead   # 多尺度检测头
+|-- yolov8_strip.py       # 完整 YOLOv8-Strip 模型
+|-- yolov8s-strip.yaml    # YOLOv8 配置文件
++-- README.md             # 本文档
+```
 
-See [Detection Docs](https://docs.ultralytics.com/tasks/detection/) for usage examples with these models.
+### API 参考
 
-| Model                                                                                | size<br><sup>(pixels) | mAP<sup>val<br>50-95 | Speed<br><sup>CPU ONNX<br>(ms) | Speed<br><sup>A100 TensorRT<br>(ms) | params<br><sup>(M) | FLOPs<br><sup>(B) |
-| ------------------------------------------------------------------------------------ | --------------------- | -------------------- | ------------------------------ | ----------------------------------- | ------------------ | ----------------- |
-| [YOLOv8n](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt) | 640                   | 37.3                 | 80.4                           | 0.99                                | 3.2                | 8.7               |
-| [YOLOv8s](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt) | 640                   | 44.9                 | 128.4                          | 1.20                                | 11.2               | 28.6              |
-| [YOLOv8m](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt) | 640                   | 50.2                 | 234.7                          | 1.83                                | 25.9               | 78.9              |
-| [YOLOv8l](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8l.pt) | 640                   | 52.9                 | 375.2                          | 2.39                                | 43.7               | 165.2             |
-| [YOLOv8x](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8x.pt) | 640                   | 53.9                 | 479.1                          | 3.53                                | 68.2               | 257.8             |
+#### LargeStripConv
 
-- **mAP<sup>val</sup>** values are for single-model single-scale on [COCO val2017](http://cocodataset.org) dataset.
-  <br>Reproduce by `yolo val detect data=coco.yaml device=0`
-- **Speed** averaged over COCO val images using an [Amazon EC2 P4d](https://aws.amazon.com/ec2/instance-types/p4/)
-  instance.
-  <br>Reproduce by `yolo val detect data=coco128.yaml batch=1 device=0/cpu`
+```python
+conv = LargeStripConv(
+    channels=64,           # 输入通道
+    kernel_size=19,        # 条带核大小（奇数）
+    groups=64,             # 分组数 (depthwise)
+)
+h_feat, v_feat = conv(x)   # 返回水平和垂直特征
+```
 
-</details>
+#### StripModule
 
-<details><summary>Segmentation</summary>
+```python
+module = StripModule(
+    in_channels=64,
+    out_channels=64,
+    strip_kernel_size=19,
+    shortcut=True,
+)
+out = module(x)
+```
 
-See [Segmentation Docs](https://docs.ultralytics.com/tasks/segmentation/) for usage examples with these models.
+#### StripC2f
 
-| Model                                                                                        | size<br><sup>(pixels) | mAP<sup>box<br>50-95 | mAP<sup>mask<br>50-95 | Speed<br><sup>CPU ONNX<br>(ms) | Speed<br><sup>A100 TensorRT<br>(ms) | params<br><sup>(M) | FLOPs<br><sup>(B) |
-| -------------------------------------------------------------------------------------------- | --------------------- | -------------------- | --------------------- | ------------------------------ | ----------------------------------- | ------------------ | ----------------- |
-| [YOLOv8n-seg](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n-seg.pt) | 640                   | 36.7                 | 30.5                  | 96.1                           | 1.21                                | 3.4                | 12.6              |
-| [YOLOv8s-seg](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s-seg.pt) | 640                   | 44.6                 | 36.8                  | 155.7                          | 1.47                                | 11.8               | 42.6              |
-| [YOLOv8m-seg](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m-seg.pt) | 640                   | 49.9                 | 40.8                  | 317.0                          | 2.18                                | 27.3               | 110.2             |
-| [YOLOv8l-seg](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8l-seg.pt) | 640                   | 52.3                 | 42.6                  | 572.4                          | 2.79                                | 46.0               | 220.5             |
-| [YOLOv8x-seg](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8x-seg.pt) | 640                   | 53.4                 | 43.4                  | 712.1                          | 4.02                                | 71.8               | 344.1             |
+```python
+c2f = StripC2f(
+    in_channels=256,
+    out_channels=256,
+    num_blocks=3,
+    strip_kernel_size=19,
+)
+out = c2f(x)
+```
 
-- **mAP<sup>val</sup>** values are for single-model single-scale on [COCO val2017](http://cocodataset.org) dataset.
-  <br>Reproduce by `yolo val segment data=coco.yaml device=0`
-- **Speed** averaged over COCO val images using an [Amazon EC2 P4d](https://aws.amazon.com/ec2/instance-types/p4/)
-  instance.
-  <br>Reproduce by `yolo val segment data=coco128-seg.yaml batch=1 device=0/cpu`
+---
 
-</details>
+## 配置说明
 
-<details><summary>Classification</summary>
+### 条带卷积核大小
 
-See [Classification Docs](https://docs.ultralytics.com/tasks/classification/) for usage examples with these models.
+根据论文 Table 8 消融实验：
 
-| Model                                                                                        | size<br><sup>(pixels) | acc<br><sup>top1 | acc<br><sup>top5 | Speed<br><sup>CPU ONNX<br>(ms) | Speed<br><sup>A100 TensorRT<br>(ms) | params<br><sup>(M) | FLOPs<br><sup>(B) at 640 |
-| -------------------------------------------------------------------------------------------- | --------------------- | ---------------- | ---------------- | ------------------------------ | ----------------------------------- | ------------------ | ------------------------ |
-| [YOLOv8n-cls](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n-cls.pt) | 224                   | 66.6             | 87.0             | 12.9                           | 0.31                                | 2.7                | 4.3                      |
-| [YOLOv8s-cls](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s-cls.pt) | 224                   | 72.3             | 91.1             | 23.4                           | 0.35                                | 6.4                | 13.5                     |
-| [YOLOv8m-cls](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m-cls.pt) | 224                   | 76.4             | 93.2             | 85.4                           | 0.62                                | 17.0               | 42.7                     |
-| [YOLOv8l-cls](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8l-cls.pt) | 224                   | 78.0             | 94.1             | 163.0                          | 0.87                                | 37.5               | 99.7                     |
-| [YOLOv8x-cls](https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8x-cls.pt) | 224                   | 78.4             | 94.3             | 232.0                          | 1.01                                | 57.4               | 154.8                    |
+| 配置 | mAP | 说明 |
+|------|-----|------|
+| (19,19,19,19) | 81.75 | 推荐（最优） |
+| (15,15,15,15) | 81.64 | 稍差 |
+| (11,11,11,11) | 81.22 | 较差 |
 
-- **acc** values are model accuracies on the [ImageNet](https://www.image-net.org/) dataset validation set.
-  <br>Reproduce by `yolo val classify data=path/to/ImageNet device=0`
-- **Speed** averaged over ImageNet val images using an [Amazon EC2 P4d](https://aws.amazon.com/ec2/instance-types/p4/)
-  instance.
-  <br>Reproduce by `yolo val classify data=path/to/ImageNet batch=1 device=0/cpu`
+### 关键设计
 
-</details>
+1. **序列式 vs 并行**: 序列式 (先 H 后 V) 效果更好
+2. **初始平方卷积**: 5x5 平方卷积是必要的，移除会导致性能下降
+3. **膨胀卷积**: 可用但效果不如标准大核
 
-## <div align="center">Integrations</div>
+---
 
-<br>
-<a href="https://bit.ly/ultralytics_hub" target="_blank">
-<img width="100%" src="https://github.com/ultralytics/assets/raw/main/yolov8/banner-integrations.png"></a>
-<br>
-<br>
+## 训练指南
 
-<div align="center">
-  <a href="https://roboflow.com/?ref=ultralytics">
-    <img src="https://github.com/ultralytics/assets/raw/main/partners/logo-roboflow.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="15%" height="0" alt="" />
-  <a href="https://cutt.ly/yolov5-readme-clearml">
-    <img src="https://github.com/ultralytics/assets/raw/main/partners/logo-clearml.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="15%" height="0" alt="" />
-  <a href="https://bit.ly/yolov5-readme-comet2">
-    <img src="https://github.com/ultralytics/assets/raw/main/partners/logo-comet.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="15%" height="0" alt="" />
-  <a href="https://bit.ly/yolov5-neuralmagic">
-    <img src="https://github.com/ultralytics/assets/raw/main/partners/logo-neuralmagic.png" width="10%" /></a>
-</div>
+### 数据集配置 (DOTA)
 
-|                                                           Roboflow                                                           |                                                            ClearML ⭐ NEW                                                            |                                                                        Comet ⭐ NEW                                                                         |                                           Neural Magic ⭐ NEW                                           |
-| :--------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
-| Label and export your custom datasets directly to YOLOv8 for training with [Roboflow](https://roboflow.com/?ref=ultralytics) | Automatically track, visualize and even remotely train YOLOv8 using [ClearML](https://cutt.ly/yolov5-readme-clearml) (open-source!) | Free forever, [Comet](https://bit.ly/yolov5-readme-comet2) lets you save YOLOv8 models, resume training, and interactively visualize and debug predictions | Run YOLOv8 inference up to 6x faster with [Neural Magic DeepSparse](https://bit.ly/yolov5-neuralmagic) |
+```yaml
+path: data/DOTA
+train: train/images
+val: val/images
 
-## <div align="center">Ultralytics HUB</div>
+nc: 15
+names:
+  0: plane
+  1: baseball-diamond
+  2: bridge
+  3: ground-track-field
+  4: small-vehicle
+  5: large-vehicle
+  6: ship
+  7: tennis-court
+  8: basketball-court
+  9: storage-tank
+  10: soccer-ball-field
+  11: roundabout
+  12: harbor
+  13: swimming-pool
+  14: helicopter
+```
 
-Experience seamless AI with [Ultralytics HUB](https://bit.ly/ultralytics_hub) ⭐, the all-in-one solution for data
-visualization, YOLOv5 and YOLOv8 (coming soon) 🚀 model training and deployment, without any coding. Transform images
-into actionable insights and bring your AI visions to life with ease using our cutting-edge platform and
-user-friendly [Ultralytics App](https://ultralytics.com/app_install). Start your journey for **Free** now!
+### 训练命令
 
-<a href="https://bit.ly/ultralytics_hub" target="_blank">
-<img width="100%" src="https://github.com/ultralytics/assets/raw/main/im/ultralytics-hub.png"></a>
+```bash
+# 单 GPU 训练
+python train.py --cfg yolov8s-strip.yaml --data dota.yaml --batch 16 --img 1024
 
-## <div align="center">Contribute</div>
+# 多 GPU 训练
+python -m torch.distributed.launch --nproc_per_node 4 train.py \
+    --cfg yolov8s-strip.yaml \
+    --data dota.yaml \
+    --batch 64
+```
 
-We love your input! YOLOv5 and YOLOv8 would not be possible without help from our community. Please see
-our [Contributing Guide](CONTRIBUTING.md) to get started, and fill out
-our [Survey](https://ultralytics.com/survey?utm_source=github&utm_medium=social&utm_campaign=Survey) to send us feedback
-on your experience. Thank you 🙏 to all our contributors!
+### 推荐超参数
 
-<!-- SVG image from https://opencollective.com/ultralytics/contributors.svg?width=990 -->
+```yaml
+epochs: 100-300
+batch_size: 16-32
+lr0: 0.001       # AdamW
+weight_decay: 0.05
+warmup_epochs: 3
+img_size: 1024   # DOTA, 640 用于通用检测
+```
 
-<a href="https://github.com/ultralytics/yolov5/graphs/contributors">
-<img src="https://github.com/ultralytics/assets/raw/main/im/image-contributors.png" /></a>
+---
 
-## <div align="center">License</div>
+## 性能对比
 
-YOLOv8 is available under two different licenses:
+### DOTA-v1.0 测试结果
 
-- **GPL-3.0 License**: See [LICENSE](https://github.com/ultralytics/ultralytics/blob/main/LICENSE) file for details.
-- **Enterprise License**: Provides greater flexibility for commercial product development without the open-source
-  requirements of GPL-3.0. Typical use cases are embedding Ultralytics software and AI models in commercial products and
-  applications. Request an Enterprise License at [Ultralytics Licensing](https://ultralytics.com/license).
+| Method | Backbone | mAP | Params | FLOPs |
+|--------|----------|-----|--------|-------|
+| Oriented R-CNN | ResNet-50 | 75.87 | 41.1M | 199G |
+| LSKNet-S | LSKNet-S | 77.49 | 31.0M | 161G |
+| PKINet-S | PKINet-S | 78.39 | 30.8M | 190G |
+| **Strip R-CNN-S** | **StripNet-S** | **82.75** | **30.5M** | **159G** |
 
-## <div align="center">Contact</div>
+---
 
-For YOLOv8 bug reports and feature requests please
-visit [GitHub Issues](https://github.com/ultralytics/ultralytics/issues) or
-the [Ultralytics Community Forum](https://community.ultralytics.com/).
+## 参考资料
 
-<br>
-<div align="center">
-  <a href="https://github.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-github.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://www.linkedin.com/company/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-linkedin.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://twitter.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-twitter.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://www.producthunt.com/@glenn_jocher" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-producthunt.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://youtube.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-youtube.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://www.facebook.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-facebook.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://www.instagram.com/ultralytics/" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-instagram.png" width="3%" alt="" /></a>
-</div>
+1. Strip R-CNN: https://arxiv.org/abs/2501.03775
+2. LSKNet: https://arxiv.org/abs/2303.04418
+3. PKINet: https://arxiv.org/abs/2401.06839
+4. YOLOv8: https://github.com/ultralytics/ultralytics
+
+---
+
+## 许可证
+
+本实现仅用于学术研究和教育目的。
+
+---
+
+## 引用
+
+```bibtex
+@article{yuan2025strip,
+  title={Strip R-CNN: Large Strip Convolution for Remote Sensing Object Detection},
+  author={Yuan, Xinbin and Zheng, Zhaohui and Li, Yuxuan and Liu, Xialei and Liu, Li and Li, Xiang and Hou, Qibin and Cheng, Ming-Ming},
+  journal={arXiv preprint arXiv:2501.03775},
+  year={2025}
+}
+```

@@ -1,0 +1,666 @@
+
+============================================================
+SECTION: ABSTRACT
+============================================================
+
+ail.nankai.edu.cn,{houqb,cmm}@nankai.edu.cn
+Projectpage: https://github.com/HVision-NKU/Strip-R-CNN
+Abstract 105
+While witnessed with rapid development, remote sensing
+objectdetectionremainschallengingfordetectinghighas-
+104
+pectratioobjects. Thispapershowsthatlargestripconvo-
+lutionsaregoodfeaturerepresentationlearnersforremote
+sensing object detection and can detect objects of various
+103
+aspect ratios well. Based on large strip convolutions, we
+buildanewnetworkarchitecturecalledStripR-CNN,which
+is simple, efficient, and powerful. Unlike recent remote
+[1,3) [3,5) [5,7) [7,9) [9,11) [11,13)[13,+ )
+sensing object detectors that leverage large-kernel convo- Aspect ratio of oriented bounding box
+lutions with square shapes, our Strip R-CNN takes advan-
+tage of sequential orthogonal large strip convolutions in
+ourbackbonenetworkStripNettocapturespatialinforma-
+tion. Inaddition,weimprovethelocalizationcapabilityof
+remote-sensingobjectdetectorsbydecouplingthedetection
+headsandequippingthelocalizationbranchwithstripcon-
+volutionsinourstriphead. Extensiveexperimentsonsev-
+eralbenchmarks,forexampleDOTA,FAIR1M,HRSC2016,
+and DIOR, show that our Strip R-CNN can greatly im-
+provepreviouswork.Inparticular,our30Mmodelachieves
+82.75%mAPonDOTA-v1.0, settinganewstate-of-the-art
+record. Ourcodewillbemadepubliclyavailable.
+1.Introduction
+Remote sensing object detection has gained significant at-
+tentioninrecentyearsduetoitsapplicationinaerialimages
+capturedbydronesandsatellites[30,31,34,35,41,44,57,
+78].Apopularpipelineisbuiltonthebasisofrotatedboxes
+tocoverobjectsofinterest. Duetoboundarydiscontinuity
+and square-like problems [67, 71, 72] and the urgent need
+to capture long-range information [1, 32], many research
+*Correspondingauthors.
+secnatsnI
+fo
+rebmuN
+50
+40
+30
+20
+10
+0
+)%(
+PAm
+Strip R-CNN S2ANet
+PKINet GWD
+LSKNet KLD
+O-RCNN
+Figure 1. Statistics of the DOTA dataset [62] and the detection
+performance of several recent state-of-the-art detectors. We can
+seethatslenderobjects(aspectratio>3)occupyanon-negligible
+proportionanddetectionperformanceofpreviousstate-of-the-art
+modelsdeclinesasaspectratioincreases.
+breakthroughs have been made to develop stronger rotated
+object detectors, including object representations [29, 63,
+64,66],IoU-simulatedlossfunctions[67,71–73],andfoun-
+dationmodels[1,32,51],etc.
+Despitethegreatprogressmadebypreviouswork,suc-
+cessfully detecting high aspect ratio objects, which are
+prevalentinremotesensingobjectdetection,isstillachal-
+lenging problem. To demonstrate this, in Fig. 1, we cal-
+culatethe statisticsofthewidely usedDOTAdataset [62],
+which shows that slender objects are quite common in re-
+motesensingscenariosandusuallyoccupyalargepropor-
+tion of the data. We also experimentally found that exist-
+ing object detection methods [1, 19, 32, 64, 71, 72] often
+strugglewithslenderobjects,wheredetectionperformance
+decreasesastheaspectratioofobjectsincreases.
+We argue that the difficulties in detecting these objects
+arisefromtwoprimarychallenges. First,highaspectratio
+1
+5202
+raM
+1
+]VC.sc[
+4v57730.1052:viXra
+
+called strip module. As such, our
+
+============================================================
+SECTION: INTRODUCTION
+============================================================
+
+ves
+82.75%mAPonDOTA-v1.0, settinganewstate-of-the-art
+record. Ourcodewillbemadepubliclyavailable.
+1.Introduction
+Remote sensing object detection has gained significant at-
+tentioninrecentyearsduetoitsapplicationinaerialimages
+capturedbydronesandsatellites[30,31,34,35,41,44,57,
+78].Apopularpipelineisbuiltonthebasisofrotatedboxes
+tocoverobjectsofinterest. Duetoboundarydiscontinuity
+and square-like problems [67, 71, 72] and the urgent need
+to capture long-range information [1, 32], many research
+*Correspondingauthors.
+secnatsnI
+fo
+rebmuN
+50
+40
+30
+20
+10
+0
+)%(
+PAm
+Strip R-CNN S2ANet
+PKINet GWD
+LSKNet KLD
+O-RCNN
+Figure 1. Statistics of the DOTA dataset [62] and the detection
+performance of several recent state-of-the-art detectors. We can
+seethatslenderobjects(aspectratio>3)occupyanon-negligible
+proportionanddetectionperformanceofpreviousstate-of-the-art
+modelsdeclinesasaspectratioincreases.
+breakthroughs have been made to develop stronger rotated
+object detectors, including object representations [29, 63,
+64,66],IoU-simulatedlossfunctions[67,71–73],andfoun-
+dationmodels[1,32,51],etc.
+Despitethegreatprogressmadebypreviouswork,suc-
+cessfully detecting high aspect ratio objects, which are
+prevalentinremotesensingobjectdetection,isstillachal-
+lenging problem. To demonstrate this, in Fig. 1, we cal-
+culatethe statisticsofthewidely usedDOTAdataset [62],
+which shows that slender objects are quite common in re-
+motesensingscenariosandusuallyoccupyalargepropor-
+tion of the data. We also experimentally found that exist-
+ing object detection methods [1, 19, 32, 64, 71, 72] often
+strugglewithslenderobjects,wheredetectionperformance
+decreasesastheaspectratioofobjectsincreases.
+We argue that the difficulties in detecting these objects
+arisefromtwoprimarychallenges. First,highaspectratio
+1
+5202
+raM
+1
+]VC.sc[
+4v57730.1052:viXra
+
+called strip module. As such, our network is quite simple
+80 StripR-CNN-S(Ours)
+RTMDet-R[43] but can generalize well to even objects of especially high
+PKINet-S[1] aspect ratios as shown in Fig. 1. Furthermore, to conquer
+78
+LSKNet-S[32]
+thesecondchallengementionedabove,wedecouplethede-
+)% ARC[51]
+(
+P
+76 O-RCNN[64] tectionheadsusedinpreviousremotesensingobjectdetec-
+A m CSL[67] tionsandstrengthenthelocalizationbranchwithstripcon-
+74 S2ANet[19]
+R3Det-KLD[72] volutionsinourstriphead. Wefoundthatthiscannotonly
+R3Det-GWD[71] assistinimprovingthelocalizationcapabilityofourmethod
+72
+SCRDet[69]
+butalsohelpmoreaccuratelyregresstheboxangles.
+AO2DETR[8]
+175 200 225 250 275 300 325 Toourknowledge, StripR-CNNisthefirstworktoex-
+Model FLOPs (G)
+plorehowtotakeadvantageoflargestripconvolutionsfor
+Figure2. Acomprehensivecomparisonofdetectionperformance remotesensingobjectdetection. Despitesimplicityandthe
+ontheDOTAdatasetofvariousremotesensingobjectdetectors.
+lightweightnature,ourStripR-CNNachievesstate-of-the-
+art performance on the standard DOTA benchmark with-
+out bells and whistles, as shown in Fig. 2. Notably, our
+objects contain rich feature information along one spatial
+model Strip R-CNN-S with only 30M learnable parame-
+dimension, whileexhibitingre
+
+============================================================
+SECTION: METHOD
+============================================================
+
+occupyalargepropor-
+tion of the data. We also experimentally found that exist-
+ing object detection methods [1, 19, 32, 64, 71, 72] often
+strugglewithslenderobjects,wheredetectionperformance
+decreasesastheaspectratioofobjectsincreases.
+We argue that the difficulties in detecting these objects
+arisefromtwoprimarychallenges. First,highaspectratio
+1
+5202
+raM
+1
+]VC.sc[
+4v57730.1052:viXra
+
+called strip module. As such, our network is quite simple
+80 StripR-CNN-S(Ours)
+RTMDet-R[43] but can generalize well to even objects of especially high
+PKINet-S[1] aspect ratios as shown in Fig. 1. Furthermore, to conquer
+78
+LSKNet-S[32]
+thesecondchallengementionedabove,wedecouplethede-
+)% ARC[51]
+(
+P
+76 O-RCNN[64] tectionheadsusedinpreviousremotesensingobjectdetec-
+A m CSL[67] tionsandstrengthenthelocalizationbranchwithstripcon-
+74 S2ANet[19]
+R3Det-KLD[72] volutionsinourstriphead. Wefoundthatthiscannotonly
+R3Det-GWD[71] assistinimprovingthelocalizationcapabilityofourmethod
+72
+SCRDet[69]
+butalsohelpmoreaccuratelyregresstheboxangles.
+AO2DETR[8]
+175 200 225 250 275 300 325 Toourknowledge, StripR-CNNisthefirstworktoex-
+Model FLOPs (G)
+plorehowtotakeadvantageoflargestripconvolutionsfor
+Figure2. Acomprehensivecomparisonofdetectionperformance remotesensingobjectdetection. Despitesimplicityandthe
+ontheDOTAdatasetofvariousremotesensingobjectdetectors.
+lightweightnature,ourStripR-CNNachievesstate-of-the-
+art performance on the standard DOTA benchmark with-
+out bells and whistles, as shown in Fig. 2. Notably, our
+objects contain rich feature information along one spatial
+model Strip R-CNN-S with only 30M learnable parame-
+dimension, whileexhibitingrelativelysparsefeatureinthe
+ters achieves the best results on DOTA leaderboard with
+other. Traditional detectors based on convolutional neural
+82.75% mAP. We also conduct extensive experiments on
+networks mostly extract input feature maps within square
+several other remote sensing datasets, including FAIR1M,
+windows. Thisdesigngreatlyrestrictstheirabilitytoeffec-
+HRSC2016, and DIOR, and show the superiority of our
+tively capture the anisotropic context, which can be com-
+Strip R-CNN over other methods. We hope that our de-
+monlyfoundinremotesensingimages,leadingtotheinclu-
+signprinciplescouldprovidenewresearchinsightsforthe
+sionofirrelevantinformationfromsurroundingareas. Sec-
+remotesensingimagerycommunity.
+ond,highaspectratioobjectsposeconsiderablechallenges
+inregressiontasksduetotheiruniquegeometricproperties.
+2.RelatedWork
+Inremotesensingobjectdetection,unlikegeneralobjectde-
+tection,anadditionalangleregressionisrequired. Forhigh
+aspect ratio objects, even a small error in angle estimation RemoteSensingObjectDetection. Inremotesensingsce-
+canleadtosignificantdeviationsfromthegroundtruth. narios,whereobjectsarearbitrarilyoriented,rotatedbound-
+To date, there are few works considering how to deal ing boxes are generally adopted for object representation.
+with challenging high aspect ratio objects. A generic ap- Early representations of rotated bounding boxes use five
+proach widely used in previous methods is to enlarge the param
+
+============================================================
+SECTION: OUR APPROACH
+============================================================
+
+minuscule
+passes previous state-of-the-art approaches, demonstrating
+instances, as shown in Tab. 4, our approach achieves out-
+itsgeneralizabilityandeffectiveness.
+standing performance, demonstrating its efficacy and gen-
+eralization ability to small objects. Our Strip R-CNN out-
+4.3.AblationStudies
+performs the former state-of-the-art method, achieving an
+improvementof0.8%. Kernelsizeofstripconvolutions. Thekernelsizeinstrip
+convolutions is critical for our proposed strip module. We
+ResultsonFAIR1M-v1.0[56]. TheresultsinTab.5reveal
+experimentwithlargekernelsizes,startingfrom11andin-
+that our Strip R-CNN reaches a highly competitive mAP
+creasinginincrementsof4. Smallerkernelsareineffective
+score of 48.26%. Our method could improve 0.39% mAP
+in capturing features of high aspect ratio objects, while a
+forLSKNet[32]andsurpassingallothermethodsbyasig-
+kernel size of 15 yielded satisfactory results, with further
+nificantmargin.
+improvement observed at 19. To further show the advan-
+Results on DIOR-R [5]. As shown in Tab. 7, we observe tageoflargestripconvolution, weaddavisualanalysisof
+2.80%improvementoverLSKNet[32]and1.67%improve- the feature representations of different kernel sizes. Fig. 8
+mentoverPKINet[1]. showsthatstripconvswithalargerkernelsizecanlearnthe
+6
+
+Table5. ComparisonswithSOTAmethodsontheFAIR1M-v1.0dataset. TheStripNet-SbackboneispretrainedonImageNetfor300
+epochs.*:ResultsarereferencedfromtheFAIR1Mpaper[56].
+Method G.V.*[66] RetinaNet*[36] C-RCNN*[2] F-RCNN*[53] RoITrans.*[10] O-RCNN[64] LSKNet-S[32] StripR-CNN-S
+mAP(%) 29.92 30.67 31.18 32.12 35.29 45.60 47.87 48.26
+Table6. ComparisonswithSOTAmethodsonHRSC2016. mAP Table8. Ablationstudyonthekernelsizeofourproposedstrip
+(07/12):VOC2007[13]/2012[14]metrics.TheStripNet-Sback- moduleatfourstagesoftheStripNetbackbonenetwork.Weadopt
+boneispretrainedonImageNetfor300epochs. theStripNet-SbackbonepretrainedonImageNetfor100epochs.
+Thebestresultisobtainedwhenusingkernelsize19atallstages.
+Method Pre. mAP(07)↑ mAP(12)↑ #P↓ FLOPs↓
+DRN[50] IN - 92.70 - - KernelSize #P↓ FLOPs↓ mAP(%)
+DAL[45] IN 89.77 - 36.4M 216G (19,19,19,19) 13.30M 52.34G 81.75
+GWD[71] IN 89.85 97.37 47.4M 456G
+(15,15,15,15) 13.28M 52.19G 81.64
+AOPG[5] IN 90.34 96.22 - -
+(11,11,11,11) 13.26M 52.03G 81.22
+O-RCNN[64] IN 90.50 97.60 41.1M 199G
+RTMDet[43] CO 90.60 97.10 52.3M 205G (15,17,19,21) 13.31M 52.26G 81.37
+LSKNet-S[32] IN 90.65 98.46 31.0M 161G (21,19,17,15) 13.29M 52.34G 81.72
+PKINet-S[1] IN 90.65 98.54 30.8M 190G
+⋆StripR-CNN-S IN 90.60 98.70 30.5M 159G
+Table9. Ablationstudyonthedesignofourproposedstripmod-
+ule. We adopt the StripNet-S backbone pretrained on ImageNet
+Table 7. Comparisons with SOTA methods on DIOR-R. The for100epochs.d:dilationrate.
+StripNet-SbackboneispretrainedonImageNetfor300epochs.
+5×5 LargeStripConv
+Method Pre. #P↓ FLOPs↓ mAP(%) SquareConv Sequential Parallel #P↓ FLOPs↓ mAP(%)
+RetinaNet-O[36] IN - - 57.55 ✗ ✓ ✗ 13.23M 51.84G 81.38
+FasterRCNN-O[53] IN 41.1M 198G 59.54 ✓ ✓ ✗ 13.30M 52.34G 81.75
+TIOE-Det[47] IN 41.1M 198G 61.98
+✓ ✗ ✓ 13.33M 52.52G 81.54
+O-RCNN[64] IN 41.1M 199G 64.30
+19×19
+ARS-DETR[79] IN 41
+
+============================================================
+SECTION: STRIP CONVOLUTION
+============================================================
+
+Strip R-CNN: Large Strip Convolution for Remote Sensing Object Detection
+XinbinYuan1 ZhaohuiZheng1 YuxuanLi1 XialeiLiu1 LiLiu3 XiangLi1,2
+QibinHou1,2* Ming-MingCheng1,2*
+1VCIP,SchoolofComputerScience,NKU 2NKIARI,Futian,Shenzhen,China
+3AcademyofAdvancedTechnologyResearchofHunan,Changsha,China
+yxb@mail.nankai.edu.cn,{houqb,cmm}@nankai.edu.cn
+Projectpage: https://github.com/HVision-NKU/Strip-R-CNN
+Abstract 105
+While witnessed with rapid development, remote sensing
+objectdetectionremainschallengingfordetectinghighas-
+104
+pectratioobjects. Thispapershowsthatlargestripconvo-
+lutionsaregoodfeaturerepresentationlearnersforremote
+sensing object detection and can detect objects of various
+103
+aspect ratios well. Based on large strip convolutions, we
+buildanewnetworkarchitecturecalledStripR-CNN,which
+is simple, efficient, and powerful. Unlike recent remote
+[1,3) [3,5) [5,7) [7,9) [9,11) [11,13)[13,+ )
+sensing object detectors that leverage large-kernel convo- Aspect ratio of oriented bounding box
+lutions with square shapes, our Strip R-CNN takes advan-
+tage of sequential orthogonal large strip convolutions in
+ourbackbonenetworkStripNettocapturespatialinforma-
+tion. Inaddition,weimprovethelocalizationcapabilityof
+remote-sensingobjectdetectorsbydecouplingthedetection
+headsandequippingthelocalizationbranchwithstripcon-
+volutionsinourstriphead. Extensiveexperimentsonsev-
+eralbenchmarks,forexampleDOTA,FAIR1M,HRSC2016,
+and DIOR, show that our Strip R-CNN can greatly im-
+provepreviouswork.Inparticular,our30Mmodelachieves
+82.75%mAPonDOTA-v1.0, settinganewstate-of-the-art
+record. Ourcodewillbemadepubliclyavailable.
+1.Introduction
+Remote sensing object detection has gained significant at-
+tentioninrecentyearsduetoitsapplicationinaerialimages
+capturedbydronesandsatellites[30,31,34,35,41,44,57,
+78].Apopularpipelineisbuiltonthebasisofrotatedboxes
+tocoverobjectsofinterest. Duetoboundarydiscontinuity
+and square-like problems [67, 71, 72] and the urgent need
+to capture long-range information [1, 32], many research
+*Correspondingauthors.
+secnatsnI
+fo
+rebmuN
+50
+40
+30
+20
+10
+0
+)%(
+PAm
+Strip R-CNN S2ANet
+PKINet GWD
+LSKNet KLD
+O-RCNN
+Figure 1. Statistics of the DOTA dataset [62] and the detection
+performance of several recent state-of-the-art detectors. We can
+seethatslenderobjects(aspectratio>3)occupyanon-negligible
+proportionanddetectionperformanceofpreviousstate-of-the-art
+modelsdeclinesasaspectratioincreases.
+breakthroughs have been made to develop stronger rotated
+object detectors, including object representations [29, 63,
+64,66],IoU-simulatedlossfunctions[67,71–73],andfoun-
+dationmodels[1,32,51],etc.
+Despitethegreatprogressmadebypreviouswork,suc-
+cessfully detecting high aspect ratio objects, which are
+prevalentinremotesensingobjectdetection,isstillachal-
+lenging problem. To demonstrate this, in Fig. 1, we cal-
+culatethe statisticsofthewidely usedDOTAdataset [62],
+which shows that slender objects are quite common in re-
+motesensingscenariosandusuallyoccupyalargepropor-
+tion of the data. We a
+
+============================================================
+SECTION: LARGE STRIP CONVOLUTION
+============================================================
+
+Strip R-CNN: Large Strip Convolution for Remote Sensing Object Detection
+XinbinYuan1 ZhaohuiZheng1 YuxuanLi1 XialeiLiu1 LiLiu3 XiangLi1,2
+QibinHou1,2* Ming-MingCheng1,2*
+1VCIP,SchoolofComputerScience,NKU 2NKIARI,Futian,Shenzhen,China
+3AcademyofAdvancedTechnologyResearchofHunan,Changsha,China
+yxb@mail.nankai.edu.cn,{houqb,cmm}@nankai.edu.cn
+Projectpage: https://github.com/HVision-NKU/Strip-R-CNN
+Abstract 105
+While witnessed with rapid development, remote sensing
+objectdetectionremainschallengingfordetectinghighas-
+104
+pectratioobjects. Thispapershowsthatlargestripconvo-
+lutionsaregoodfeaturerepresentationlearnersforremote
+sensing object detection and can detect objects of various
+103
+aspect ratios well. Based on large strip convolutions, we
+buildanewnetworkarchitecturecalledStripR-CNN,which
+is simple, efficient, and powerful. Unlike recent remote
+[1,3) [3,5) [5,7) [7,9) [9,11) [11,13)[13,+ )
+sensing object detectors that leverage large-kernel convo- Aspect ratio of oriented bounding box
+lutions with square shapes, our Strip R-CNN takes advan-
+tage of sequential orthogonal large strip convolutions in
+ourbackbonenetworkStripNettocapturespatialinforma-
+tion. Inaddition,weimprovethelocalizationcapabilityof
+remote-sensingobjectdetectorsbydecouplingthedetection
+headsandequippingthelocalizationbranchwithstripcon-
+volutionsinourstriphead. Extensiveexperimentsonsev-
+eralbenchmarks,forexampleDOTA,FAIR1M,HRSC2016,
+and DIOR, show that our Strip R-CNN can greatly im-
+provepreviouswork.Inparticular,our30Mmodelachieves
+82.75%mAPonDOTA-v1.0, settinganewstate-of-the-art
+record. Ourcodewillbemadepubliclyavailable.
+1.Introduction
+Remote sensing object detection has gained significant at-
+tentioninrecentyearsduetoitsapplicationinaerialimages
+capturedbydronesandsatellites[30,31,34,35,41,44,57,
+78].Apopularpipelineisbuiltonthebasisofrotatedboxes
+tocoverobjectsofinterest. Duetoboundarydiscontinuity
+and square-like problems [67, 71, 72] and the urgent need
+to capture long-range information [1, 32], many research
+*Correspondingauthors.
+secnatsnI
+fo
+rebmuN
+50
+40
+30
+20
+10
+0
+)%(
+PAm
+Strip R-CNN S2ANet
+PKINet GWD
+LSKNet KLD
+O-RCNN
+Figure 1. Statistics of the DOTA dataset [62] and the detection
+performance of several recent state-of-the-art detectors. We can
+seethatslenderobjects(aspectratio>3)occupyanon-negligible
+proportionanddetectionperformanceofpreviousstate-of-the-art
+modelsdeclinesasaspectratioincreases.
+breakthroughs have been made to develop stronger rotated
+object detectors, including object representations [29, 63,
+64,66],IoU-simulatedlossfunctions[67,71–73],andfoun-
+dationmodels[1,32,51],etc.
+Despitethegreatprogressmadebypreviouswork,suc-
+cessfully detecting high aspect ratio objects, which are
+prevalentinremotesensingobjectdetection,isstillachal-
+lenging problem. To demonstrate this, in Fig. 1, we cal-
+culatethe statisticsofthewidely usedDOTAdataset [62],
+which shows that slender objects are quite common in re-
+motesensingscenariosandusuallyoccupyalargepropor-
+tion of the data
+
+============================================================
+SECTION: DETECTION HEAD
+============================================================
+
+reinthisresearchfield. Based on the O-RCNN framework [64], our Strip R-CNN
+replace the backbone and detection head with our Strip-
+LargeKernelNetworksforRemoteSensingObjectDe-
+Net backbone and strip head, respectively. Specifically,
+tection. Convolutionwithlargekernelhasbeenanemerg-
+thebackboneismainlycomposedofbasicblocksproposed
+ing and promising solution to remote sensing object de-
+asillustratedinFig.4, whichconsistsoftworesidualsub-
+tection, which has been validated to have highly compet-
+blocks: the strip sub-block and the feed-forward network
+itive performance against the Transformer-based methods
+sub-block. Thestripsub-blockisbuiltuponasmall-kernel
+inimageclassificationandsegmentation[3,11,12,16,17,
+standardconvolutionandtwoconvolutionswithlargestrip-
+25, 26, 37, 75]. In remote sensing object detection, some
+shapedkernelstocapturerobustfeaturesforobjectsofdif-
+approachesputeffortsonemployinglarge-kernelconvolu-
+ferent aspect ratios. For the feed-forward network sub-
+tionstogetlong-rangecontextualinformation[1,33]. For
+block, we simply follow LSKNet [32], which is used to
+example, LSKNet [33] utilizes large kernel convolutions
+facilitate channel mixing and feature refinement. The de-
+andaselectionmechanismtomodelthecontextualinforma-
+tailed configurations of different variants of our StripNet
+tion needed for different object categories. PKINet [1] ar-
+backboneareshowninTab.1. Forthestemlayers,wekeep
+rangesmultiplelarge-kernelconvolutionsinparalleltoex-
+themthesametoLSKNet[32]. Forthedetectionhead,we
+tract dense texture features across diverse receptive fields,
+decouplethelocalizationbranchfromtheoriginalO-RCNN
+and introduces a context anchor attention mechanism to
+headandenhanceitwiththeproposedstripmodule,result-
+capture relationships between distant pixels. However, the
+inginourstriphead,whichwillbepresentedinSec.3.3.
+parallel paradigm of leveraging multiple large-kernel con-
+volutions exacerbates the computational burden, and the
+3.2.StripModule
+complicated block design makes the model not efficient.
+Regardingthehighvariationoftheobjectaspectratio,how As discussed in Sec. 1, large square kernel convolutions
+to efficiently make use of large-kernel convolutions is still provideessentiallong-rangecontextualinformationforre-
+an open question. To our knowledge, Strip R-CNN is the mote sensing applications. PKINet [1] introduces parallel
+first work to explore how to take advantage of large strip largesquarekernelconvolutionsandspatialattentionmech-
+convolutionsforremotesensingobjectdetection. anismtoextractspatialinformation. However, theparallel
+paradigm of leveraging multiple large-kernel convolutions
+3.StripR-CNN exacerbatesthecomputationalburden,andthecomplicated
+block design makes the model not efficient. Our objective
+Inthissection,wedescribethearchitectureoftheproposed istoefficientlyextractessentialfeaturesforobjectsofvary-
+StripR-CNNindetail. Ourgoalistoadvanceremotesens- ingaspectratios.Theoutcomeisasequentialparadigmthat
+ingobjectdetectorswithlargestripconvolutionssothatthe efficiently combines the advantages of both standard and
+
+============================================================
+SECTION: EXPERIMENT
+============================================================
+
+gthedetection
+headsandequippingthelocalizationbranchwithstripcon-
+volutionsinourstriphead. Extensiveexperimentsonsev-
+eralbenchmarks,forexampleDOTA,FAIR1M,HRSC2016,
+and DIOR, show that our Strip R-CNN can greatly im-
+provepreviouswork.Inparticular,our30Mmodelachieves
+82.75%mAPonDOTA-v1.0, settinganewstate-of-the-art
+record. Ourcodewillbemadepubliclyavailable.
+1.Introduction
+Remote sensing object detection has gained significant at-
+tentioninrecentyearsduetoitsapplicationinaerialimages
+capturedbydronesandsatellites[30,31,34,35,41,44,57,
+78].Apopularpipelineisbuiltonthebasisofrotatedboxes
+tocoverobjectsofinterest. Duetoboundarydiscontinuity
+and square-like problems [67, 71, 72] and the urgent need
+to capture long-range information [1, 32], many research
+*Correspondingauthors.
+secnatsnI
+fo
+rebmuN
+50
+40
+30
+20
+10
+0
+)%(
+PAm
+Strip R-CNN S2ANet
+PKINet GWD
+LSKNet KLD
+O-RCNN
+Figure 1. Statistics of the DOTA dataset [62] and the detection
+performance of several recent state-of-the-art detectors. We can
+seethatslenderobjects(aspectratio>3)occupyanon-negligible
+proportionanddetectionperformanceofpreviousstate-of-the-art
+modelsdeclinesasaspectratioincreases.
+breakthroughs have been made to develop stronger rotated
+object detectors, including object representations [29, 63,
+64,66],IoU-simulatedlossfunctions[67,71–73],andfoun-
+dationmodels[1,32,51],etc.
+Despitethegreatprogressmadebypreviouswork,suc-
+cessfully detecting high aspect ratio objects, which are
+prevalentinremotesensingobjectdetection,isstillachal-
+lenging problem. To demonstrate this, in Fig. 1, we cal-
+culatethe statisticsofthewidely usedDOTAdataset [62],
+which shows that slender objects are quite common in re-
+motesensingscenariosandusuallyoccupyalargepropor-
+tion of the data. We also experimentally found that exist-
+ing object detection methods [1, 19, 32, 64, 71, 72] often
+strugglewithslenderobjects,wheredetectionperformance
+decreasesastheaspectratioofobjectsincreases.
+We argue that the difficulties in detecting these objects
+arisefromtwoprimarychallenges. First,highaspectratio
+1
+5202
+raM
+1
+]VC.sc[
+4v57730.1052:viXra
+
+called strip module. As such, our network is quite simple
+80 StripR-CNN-S(Ours)
+RTMDet-R[43] but can generalize well to even objects of especially high
+PKINet-S[1] aspect ratios as shown in Fig. 1. Furthermore, to conquer
+78
+LSKNet-S[32]
+thesecondchallengementionedabove,wedecouplethede-
+)% ARC[51]
+(
+P
+76 O-RCNN[64] tectionheadsusedinpreviousremotesensingobjectdetec-
+A m CSL[67] tionsandstrengthenthelocalizationbranchwithstripcon-
+74 S2ANet[19]
+R3Det-KLD[72] volutionsinourstriphead. Wefoundthatthiscannotonly
+R3Det-GWD[71] assistinimprovingthelocalizationcapabilityofourmethod
+72
+SCRDet[69]
+butalsohelpmoreaccuratelyregresstheboxangles.
+AO2DETR[8]
+175 200 225 250 275 300 325 Toourknowledge, StripR-CNNisthefirstworktoex-
+Model FLOPs (G)
+plorehowtotakeadvantageoflargestripconvolutionsfor
+Figure2. Acomprehensivecomparisonofdetectionperformance remotesensingobjectdetection. Despitesimplicityandthe
+ontheDOTAdatasetofvariousremotesensingobjectdetectors.
+lightweightnature,ourStripR-CNNachieve
+
+============================================================
+SECTION: IMPLEMENTATION DETAILS
+============================================================
+
+.Thestructureofthestripheadisshownat stances.
+thebottomof Fig.5. Detailedsettingsaredescribedbelow.
+Implementation details. Our training process is divided
+Classification head: The classification head simply uti- intotwostages:pretrainingonImageNet[9]andfine-tuning
+lizes two fully connected layers with an output dimension ondownstreamremotesensingdatasets.Forablationexper-
+of 1024. Using fully connected layers in the classification iments,wetrainallthemodelsfor100epochs. Toachieve
+headhasbeenshowntobeagoodchoice,asdemonstrated higherperformance,wetrainthemodelsfor300epochsfor
+inDouble-HeadRCNN[61],sowekeepitunchanged. thefinalresults. ThenumberoftrainingepochsforDOTA,
+DOTAv1.5, HRSC2016, FAIR1M-v1.0, and DIOR-R are
+Localization head: The localization head begins with a
+set to 12, 12, 36, 12, and 12, respectively, following pre-
+standard 3×3 convolution to extract local features. Then
+vious methods. Learning rates are set to 0.0001, 0.0001,
+weaddastripmodule,followedbyafullyconnectedlayer
+0.0004, 0.0001, and 0.0001, respectively. The input sizes
+tocollectlong-rangespatialdependencies.
+for HRSC2016 and DIOR-R are 800×800, while for the
+Anglehead:Forangleprediction,weadoptthreefullycon- DOTA-v1.0, DOTA-v1.5 and FAIR1M-v1.0 datasets, the
+nected layers to estimate angular information, which we input sizes are 1024×1024. During training, we employ
+found works well. Note that the first two fully connected the AdamW [42] optimizer with β = 0.9,β = 0.999,
+1 2
+layersshareparameterswiththeclassificationhead. and a weight decay of 0.05. All the models are trained on
+It is worth noting that our detection head incorporates 8 NVIDIA 3090 GPUs with a batch size of 8, and test is
+the proposed strip module. This design largely improves conductedonasingleNVIDIA3090GPU.
+the detection capability compared to the original Oriented
+R-CNN head. As shown in Fig. 6, from the visualization 4.2.MainResults
+of the spatial sensitivity of different methods, we can see
+We first compare our Strip R-CNN with recent state-of-
+thattheOrientedR-CNNheadhasasimilarspatialcorrela-
+the-artmethodswithstrongbackbonesimplementedwithin
+tionpatternontheoutputfeaturemaps. However,ourstrip
+the Oriented R-CNN [64] framework on the DOTA v1.0
+head has much more spatial correlations in the output fea-
+dataset. As shown in Tab. 2, Strip R-CNN-S achieves an
+turemaps. Wewillshowthatthisenablesourmethodtobe
+improvementof1.67%whileusing0.4%fewerparameters
+abletobetterlocalizeobjectsevenofhigheraspectratios.
+and only 74.3% of the computations required by PKINet-
+S [1]. Additionally, Strip R-CNN-S shows a 2.57% en-
+4.Experiments
+hancement over LSKNet-S [32] utilizing 1.1% fewer pa-
+rametersand2.2%lesscomputations.
+4.1.ExperimentSetup
+Results on DOTA-v1.0 [62]. We conduct a comparative
+Datasets. Weconductextensiveexperimentsonfivepopu- analysisofdifferentmodelsandpresentdetailedresultsfor
+larremotesensingobjectdetectiondatasets. meanAveragePrecision(mAP)andAveragePrecision(AP)
+• DOTA-v1.0[62]isalarge-scaledatasetforremotesens- acrosscategoriesontheDOTAdataset(refertomoremodel
+ing detection which contains
