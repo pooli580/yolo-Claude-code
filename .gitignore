@@ -28,3 +28,15 @@ Thumbs.db
 
 # Local configuration (may contain secrets)
 .claude/settings.local.json
+
+# Large model files
+*.pt
+*.pth
+*.ckpt
+*.bin
+
+# Training runs
+runs/
+
+# Large archives
+*.zip
